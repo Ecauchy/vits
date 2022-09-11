@@ -271,6 +271,48 @@ def japanese_to_romaji_with_accent(text):
       text += unidecode(marks[i]).replace(' ','')
   return text
 
+def japanese_to_full_romaji_with_tone_letters(text):
+  '''Reference https://r9y9.github.io/ttslearn/latest/notebooks/ch10_Recipe-Tacotron.html'''
+  text = symbols_to_japanese(text)
+  sentences = re.split(_japanese_marks, text)
+  marks = re.findall(_japanese_marks, text)
+  text = ''
+  for i, sentence in enumerate(sentences):
+    if re.match(_japanese_characters, sentence):
+      if text != '':
+        text += ' '
+      labels = pyopenjtalk.extract_fullcontext(sentence)
+      for n, label in enumerate(labels):
+        phoneme = re.search(r'\-([^\+]*)\+', label).group(1)
+        if phoneme not in ['sil', 'pau']:
+          a3 = int(re.search(r"\+(\d+)/", label).group(1))
+          if a3 != 1:
+            phoneme_next = re.search(r'\-([^\+]*)\+', labels[n + 1]).group(1)
+            cl_replace = phoneme_next if phoneme_next in 'aeiou' else 'Q'
+          else:
+            cl_replace = '!'
+          text += phoneme.replace('ch', 'ʧ').replace('sh', 'ʃ')\
+            .replace('cl', cl_replace).replace('ts','ʦ')
+        else:
+          continue
+        a1 = int(re.search(r"/A:(\-?[0-9]+)\+", label).group(1))
+        a2 = int(re.search(r"\+(\d+)\+", label).group(1))
+
+        # morae after the accent. L or ˧ for low.
+        if a1 > 0:
+          text += '˧'
+        # the mora the accent is on. H or ˥ for high.
+        elif a1 == 0:
+          text += '˥'
+        # the first mora, also before the accent. L or ˧ for low.
+        elif a2 == 1:
+          text += '˧'
+        # other morae before the accent. H or ˥ for high.
+        else:
+          text += '˥'
+    if i < len(marks):
+      text += unidecode(marks[i]).replace(' ', '').replace('...','…')
+  return text
 
 def latin_to_hangul(text):
   for regex, replacement in _latin_to_hangul:
@@ -443,6 +485,11 @@ def japanese_cleaners(text):
 def japanese_cleaners2(text):
   return japanese_cleaners(text).replace('ts','ʦ').replace('...','…')
 
+def japanese_cleaners3(text):
+  text = japanese_to_full_romaji_with_tone_letters(text)
+  if re.match('[A-Za-z]', text[-1]):
+    text += '.'
+  return text
 
 def korean_cleaners(text):
   '''Pipeline for Korean text'''
