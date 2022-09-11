@@ -288,7 +288,7 @@ def japanese_to_full_romaji_with_tone_letters(text):
           a3 = int(re.search(r"\+(\d+)/", label).group(1))
           if a3 != 1:
             phoneme_next = re.search(r'\-([^\+]*)\+', labels[n + 1]).group(1)
-            cl_replace = phoneme_next if phoneme_next in 'aeiou' else 'Q'
+            cl_replace = 'Q' if phoneme_next in 'aeiou' else phoneme_next
           else:
             cl_replace = '!'
           text += phoneme.replace('ch', 'ʧ').replace('sh', 'ʃ')\
