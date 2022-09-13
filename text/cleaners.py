@@ -348,8 +348,11 @@ def japanese_to_full_romaji_with_tone_letters(text):
         # other morae before the accent. H or ˥ for high.
         else:
           text += '˥'
+        # Accent phrase boundary
+        if (a3 == 1) and (a2_next == 1):
+          text += ' '
     if i < len(marks):
-      text += unidecode(marks[i]).replace(' ', '').replace('...','…')
+      text += unidecode(marks[i]).replace(' ', '')
   return text
 
 
@@ -530,9 +533,9 @@ def japanese_cleaners2(text):
 
 def japanese_cleaners3(text):
   text = japanese_to_full_romaji_with_tone_letters(text)
-  if re.match('[A-Za-z]', text[-1]):
+  if re.match('[˥˦˧˨˩]', text[-1]):
     text += '.'
-  return text
+  return text.replace('...','…')
 
 def korean_cleaners(text):
   '''Pipeline for Korean text'''
