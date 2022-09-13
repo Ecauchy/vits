@@ -18,6 +18,7 @@ import pyopenjtalk
 from jamo import h2j, j2hcj
 from pypinyin import lazy_pinyin, BOPOMOFO
 import jieba, cn2an
+from symbols import _punctuation
 
 
 # This is a list of Korean classifiers preceded by pure Korean numerals.
@@ -31,6 +32,12 @@ _japanese_characters = re.compile(r'[A-Za-z\d\u3005\u3040-\u30ff\u4e00-\u9fff\uf
 
 # Regular expression matching non-Japanese characters or punctuation marks:
 _japanese_marks = re.compile(r'[^A-Za-z\d\u3005\u3040-\u30ff\u4e00-\u9fff\uff11-\uff19\uff21-\uff3a\uff41-\uff5a\uff66-\uff9d]')
+
+# maximum steps for checking kitsuon (吃音)
+_kitsuon_max_step = 3
+
+# Regular expression matching punctuations:
+_punctuation_re = '[\\' + '\\'.join([x for x in _punctuation]) + ']+'
 
 # List of (regular expression, replacement) pairs for abbreviations:
 _abbreviations = [(re.compile('\\b%s\\.' % x[0], re.IGNORECASE), x[1]) for x in [
@@ -298,6 +305,10 @@ def japanese_to_full_romaji_with_tone_letters(text):
   sentences = re.split(_japanese_marks, text)
   marks = re.findall(_japanese_marks, text)
   text = ''
+
+  kitsuon_idx = []
+  pau_idx = 0
+
   for i, sentence in enumerate(sentences):
     if re.match(_japanese_characters, sentence):
       if text != '':
@@ -306,7 +317,13 @@ def japanese_to_full_romaji_with_tone_letters(text):
       for n, label in enumerate(labels):
         # p3
         phoneme = re.search(r'\-([^\+]*)\+', label).group(1)
-        if phoneme in ['sil', 'pau']:
+        if phoneme == 'sil':
+          continue
+        elif phoneme == 'pau':
+          kitsuon_len = findKitsuon(labels, n)
+          if not kitsuon_len == 0:
+            kitsuon_idx.append((pau_idx, kitsuon_len))
+          pau_idx += 1
           continue
 
         a3 = int(re.search(r"\+(\d+)/", label).group(1))
@@ -350,11 +367,61 @@ def japanese_to_full_romaji_with_tone_letters(text):
           text += '˥'
     if i < len(marks):
       text += unidecode(marks[i]).replace(' ', '').replace('...','…')
+
+  if kitsuon_idx:
+    text_list = list(text)
+    marker_idxs = [x.start() for x in re.finditer(_punctuation_re, text)]
+    for idx, length in kitsuon_idx:
+      marker_idx = marker_idxs[idx]
+      text_list[marker_idx - length:marker_idx] = text_list[marker_idx + 2:marker_idx + length + 2]
+    text = "".join(text_list)
+
   return text
 
 
 def real_voice_for_sokkuon(phoneme_next):
   return _sokuon_to_voice.get(phoneme_next[0], 'Q')
+
+
+def findKitsuon(labels, n):
+  kitsuon_len, onsetsu_before_tmp, onsetsu_after_tmp, onsetsu_cnt = 0, 0, 0, 0
+  voice_before, voice_after = '', ''
+  for i in range(1, _kitsuon_max_step + 1):
+    onsetsu_before, onsetsu_before_len, stop_before = findOnsetsu(labels, n - onsetsu_before_tmp - 1, forward=False)
+    onsetsu_after, onsetsu_after_len, stop_after = findOnsetsu(labels, n + onsetsu_after_tmp + 1, forward=True)
+    if stop_before or stop_after:
+      break
+
+    voice_before = onsetsu_before + voice_before
+    voice_after = voice_after + onsetsu_after
+
+    onsetsu_cnt += 1
+    onsetsu_before_tmp += onsetsu_before_len
+    onsetsu_after_tmp += onsetsu_after_len
+
+    if voice_before == voice_after:
+      kitsuon_len = onsetsu_before_tmp + onsetsu_cnt
+
+  # +1 for the tone symbol
+  return kitsuon_len
+
+
+def findOnsetsu(labels, n, forward):
+  p3 = re.search(r"\-([^\+]*)\+", labels[n]).group(1)
+  if p3 in ['sil', 'pau']:
+    return '', 0, True
+
+  p3_another = re.search(r"\+([^=]*)=", labels[n]).group(1) if forward \
+    else re.search(r"\^([^\-]*)\-", labels[n]).group(1)
+  onsetsu = p3
+  if p3_another not in ['sil', 'pau']:
+    a1_another = int(re.search(r"/A:(\-?[0-9]+)\+", labels[n + 1 if forward else n - 1]).group(1))
+    a1 = int(re.search(r"/A:(\-?[0-9]+)\+", labels[n]).group(1))
+    if a1 == a1_another:
+      onsetsu = (onsetsu + p3_another) if forward else (p3_another + onsetsu)
+      return onsetsu, 2, False
+    return onsetsu, 1, False
+  return onsetsu, 1, False
 
 
 def latin_to_hangul(text):
