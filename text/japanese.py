@@ -79,6 +79,28 @@ _real_hatsuon = {
 }
 
 
+# Map of (sokuon, voice) pairs:
+_sokuon_to_voice = {
+  'b': 'p',
+  'c': 't',
+  'd': 't',
+  'f': 'f',
+  'g': 'k',
+  'j': 't',
+  'k': 'k',
+  'l': 'l',
+  'm': 'm',
+  'n': 'n',
+  'p': 'p',
+  'q': 'k',
+  'r': 'r',
+  's': 's',
+  't': 't',
+  'v': 'f',
+  'z': 't'
+}
+
+
 def symbols_to_japanese(text):
     for regex, replacement in _symbols_to_japanese:
         text = re.sub(regex, replacement, text)
@@ -126,6 +148,74 @@ def japanese_to_romaji_with_accent(text):
     return text
 
 
+def japanese_to_full_romaji_with_tone_letters(text):
+  '''Reference https://r9y9.github.io/ttslearn/latest/notebooks/ch10_Recipe-Tacotron.html'''
+  text = symbols_to_japanese(text)
+  sentences = re.split(_japanese_marks, text)
+  marks = re.findall(_japanese_marks, text)
+  text = ''
+  for i, sentence in enumerate(sentences):
+    if re.match(_japanese_characters, sentence):
+      if text != '':
+        text += ' '
+      labels = pyopenjtalk.extract_fullcontext(sentence)
+      for n, label in enumerate(labels):
+        # p3
+        phoneme = re.search(r'\-([^\+]*)\+', label).group(1)
+        if phoneme in ['sil', 'pau']:
+          continue
+
+        a3 = int(re.search(r"\+(\d+)/", label).group(1))
+        # p4
+        phoneme_next = re.search(r"\+([^=]*)=", label).group(1)
+        if phoneme == 'cl':
+          if a3 != 1:
+            cl_replace = real_voice_for_sokkuon(phoneme_next)
+          else:
+            cl_replace = 'Q'
+          text = text[:-1] + cl_replace + text[-1:]
+          continue
+        else:
+          text += phoneme.replace('ch', 'ʧ').replace('sh', 'ʃ').replace('ts', 'ʦ')
+
+        a1 = int(re.search(r"/A:(\-?[0-9]+)\+", label).group(1))
+        a2 = int(re.search(r"\+(\d+)\+", label).group(1))
+        f5 = int(re.search(r"@(\d+)_", label).group(1))
+        i3 = int(re.search(r"@(\d+)\+", label).group(1))
+        if phoneme_next in ['sil', 'pau']:
+          a2_next, f5_next, i3_next = -1, -1, -1
+        else:
+          a2_next = int(re.search(r"\+(\d+)\+", labels[n + 1]).group(1))
+          f5_next = int(re.search(r"@(\d+)_", labels[n + 1]).group(1))
+          i3_next = int(re.search(r"@(\d+)\+", labels[n + 1]).group(1))
+
+        # the same mora, the same accent phrase, the same breath group
+        if (a2_next == a2) and (f5_next == f5) and (i3_next == i3):
+          continue
+        # morae after the accent. L or ˧ for low.
+        if a1 > 0:
+          text += '˧'
+        # the mora the accent is on. H or ˥ for high.
+        elif a1 == 0:
+          text += '˥'
+        # the first mora, also before the accent. L or ˧ for low.
+        elif a2 == 1:
+          text += '˧'
+        # other morae before the accent. H or ˥ for high.
+        else:
+          text += '˥'
+        # Accent phrase boundary
+        if (a3 == 1) and (a2_next == 1):
+          text += ' '
+    if i < len(marks):
+      text += unidecode(marks[i]).replace(' ', '')
+  return text
+
+
+def real_voice_for_sokkuon(phoneme_next):
+  return _sokuon_to_voice.get(phoneme_next[0], 'Q')
+
+
 def get_real_sokuon(text):
   text=re.sub('Q[↑↓]*(.)',lambda x:_real_sokuon[x.group(1)]+x.group(0)[1:] if x.group(1) in _real_sokuon.keys() else x.group(0),text)
   return text
@@ -152,5 +242,13 @@ def japanese_to_ipa2(text):
     for regex, replacement in _romaji_to_ipa2:
         text = re.sub(regex, replacement, text)
     text = get_real_sokuon(text)
+    text = get_real_hatsuon(text)
+    return text
+
+
+def japanese_to_ipa3(text):
+    text=japanese_to_full_romaji_with_tone_letters(text).replace('...', '…')
+    for regex, replacement in _romaji_to_ipa2:
+        text = re.sub(regex, replacement, text)
     text = get_real_hatsuon(text)
     return text

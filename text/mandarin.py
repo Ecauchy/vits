@@ -89,10 +89,10 @@ _bopomofo_to_romaji = [(re.compile('%s' % x[0]), x[1]) for x in [
     ('ㄧ', 'i'),
     ('ㄨ', 'u'),
     ('ㄩ', 'ɥ'),
-    ('ˉ', '→'),
-    ('ˊ', '↑'),
-    ('ˇ', '↓↑'),
-    ('ˋ', '↓'),
+    ('ˉ', '˥˥'),
+    ('ˊ', '˧˥'),
+    ('ˇ', '˨˩˧'),
+    ('ˋ', '˥˩'),
     ('˙', ''),
     ('，', ','),
     ('。', '.'),
@@ -162,10 +162,10 @@ _bopomofo_to_ipa = [(re.compile('%s' % x[0]), x[1]) for x in [
     ('ㄧ', 'i'),
     ('ㄨ', 'u'),
     ('ㄩ', 'ɥ'),
-    ('ˉ', '→'),
-    ('ˊ', '↑'),
-    ('ˇ', '↓↑'),
-    ('ˋ', '↓'),
+    ('ˉ', '˥˥'),
+    ('ˊ', '˧˥'),
+    ('ˇ', '˨˩˧'),
+    ('ˋ', '˥˩'),
     ('˙', ''),
     ('，', ','),
     ('。', '.'),
@@ -225,9 +225,9 @@ def chinese_to_romaji(text):
     text = bopomofo_to_romaji(text)
     text = re.sub('i[aoe]', lambda x: 'y'+x.group(0)[1:], text)
     text = re.sub('u[aoəe]', lambda x: 'w'+x.group(0)[1:], text)
-    text = re.sub('([ʦsɹ]`[⁼ʰ]?)([→↓↑ ]+|$)', lambda x: x.group(1) +
+    text = re.sub('([ʦsɹ]`[⁼ʰ]?)([˥˦˧˨˩ ]+|$)', lambda x: x.group(1) +
                   'ɹ`'+x.group(2), text).replace('ɻ', 'ɹ`')
-    text = re.sub('([ʦs][⁼ʰ]?)([→↓↑ ]+|$)',
+    text = re.sub('([ʦs][⁼ʰ]?)([˥˦˧˨˩ ]+|$)',
                   lambda x: x.group(1)+'ɹ'+x.group(2), text)
     return text
 
@@ -246,8 +246,8 @@ def chinese_to_ipa(text):
     text = bopomofo_to_ipa(text)
     text = re.sub('i[aoe]', lambda x: 'y'+x.group(0)[1:], text)
     text = re.sub('u[aoəe]', lambda x: 'w'+x.group(0)[1:], text)
-    text = re.sub('([ʦsɹ]`[⁼ʰ]?)([→↓↑ ]+|$)', lambda x: x.group(1) +
+    text = re.sub('([ʦsɹ]`[⁼ʰ]?)([˥˦˧˨˩ ]+|$)', lambda x: x.group(1) +
                   'ɹ`'+x.group(2), text).replace('ɻ', 'ɹ`')
-    text = re.sub('([ʦs][⁼ʰ]?)([→↓↑ ]+|$)',
+    text = re.sub('([ʦs][⁼ʰ]?)([˥˦˧˨˩ ]+|$)',
                   lambda x: x.group(1)+'ɹ'+x.group(2), text)
     return text

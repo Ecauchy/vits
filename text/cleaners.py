@@ -1,5 +1,5 @@
 import re
-from text.japanese import japanese_to_romaji_with_accent, japanese_to_ipa, japanese_to_ipa2
+from text.japanese import japanese_to_romaji_with_accent, japanese_to_ipa, japanese_to_ipa2, japanese_to_full_romaji_with_tone_letters
 from text.korean import latin_to_hangul, number_to_hangul, divide_hangul, korean_to_lazy_ipa, korean_to_ipa
 from text.mandarin import number_to_chinese, chinese_to_bopomofo, latin_to_bopomofo, chinese_to_romaji, chinese_to_lazy_ipa, chinese_to_ipa
 from text.sanskrit import devanagari_to_ipa
@@ -51,11 +51,12 @@ def zh_ja_mixture_cleaners(text):
         cleaned_text = chinese_to_romaji(chinese_text[4:-4])
         text = text.replace(chinese_text, cleaned_text+' ', 1)
     for japanese_text in japanese_texts:
-        cleaned_text = japanese_to_romaji_with_accent(
-            japanese_text[4:-4]).replace('ts', 'ʦ').replace('u', 'ɯ').replace('...', '…')
+        cleaned_text = japanese_to_full_romaji_with_tone_letters(
+            japanese_text[4:-4]).replace('ts', 'ʦ').replace('u', 'ɯ').replace('...', '…')\
+            .replace('U', 'ɹ').replace('I', 'ɹ')
         text = text.replace(japanese_text, cleaned_text+' ', 1)
     text = text[:-1]
-    if re.match('[A-Za-zɯɹəɥ→↓↑]', text[-1]):
+    if re.match('[A-Za-zɯɹəɥ˥˦˧˨˩]', text[-1]):
         text += '.'
     return text
 
