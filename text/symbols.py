@@ -50,6 +50,24 @@ _punctuation = ',.!?-~…'
 _letters = 'NQabdefghijklmnopstuvwxyzʃʧʥʦɯɹəɥçɸɾβŋɦː⁼ʰ`^#*=→↓↑ '
 '''
 
+'''# thai_cleaners
+_pad        = '_'
+_punctuation = '.!? '
+_letters = 'กขฃคฆงจฉชซฌญฎฏฐฑฒณดตถทธนบปผฝพฟภมยรฤลวศษสหฬอฮฯะัาำิีึืุูเแโใไๅๆ็่้๊๋์'
+'''
+
+'''# cjke_cleaners2
+_pad        = '_'
+_punctuation = ',.!?-~…'
+_letters = 'NQabdefghijklmnopstuvwxyzɑæʃʑçɯɪɔɛɹðəɫɥɸʊɾʒθβŋɦ⁼ʰ`^#*=ˈˌ→↓↑ '
+'''
+
+'''# shanghainese_cleaners
+_pad        = '_'
+_punctuation = ',.!?…'
+_letters = 'abdfghiklmnopstuvyzøŋȵɑɔɕəɤɦɪɿʑʔʰ̩̃ᴀᴇ15678 '
+'''
+
 # Export all symbols:
 symbols = [_pad] + list(_punctuation) + list(_letters)
 
