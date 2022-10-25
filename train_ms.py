@@ -36,7 +36,7 @@ from losses import (
   kl_loss
 )
 from mel_processing import mel_spectrogram_torch, spec_to_mel_torch
-from text.symbols import symbols
+from text.symbols import symbols, tone_symbols
 
 
 torch.backends.cudnn.benchmark = True
@@ -90,6 +90,7 @@ def run(rank, n_gpus, hps):
       hps.data.filter_length // 2 + 1,
       hps.train.segment_size // hps.data.hop_length,
       n_speakers=hps.data.n_speakers,
+      n_tones=len(tone_symbols),
       **hps.model).cuda(rank)
   net_d = MultiPeriodDiscriminator(hps.model.use_spectral_norm).cuda(rank)
   optim_g = torch.optim.AdamW(

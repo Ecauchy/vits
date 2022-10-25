@@ -432,6 +432,7 @@ class SynthesizerTrn(nn.Module):
                  upsample_initial_channel,
                  upsample_kernel_sizes,
                  n_speakers=0,
+                 n_tones=8,
                  gin_channels=0,
                  use_sdp=True,
                  **kwargs):
@@ -454,6 +455,7 @@ class SynthesizerTrn(nn.Module):
         self.upsample_kernel_sizes = upsample_kernel_sizes
         self.segment_size = segment_size
         self.n_speakers = n_speakers
+        self.n_tones = n_tones
         self.gin_channels = gin_channels
 
         self.use_sdp = use_sdp
@@ -465,7 +467,8 @@ class SynthesizerTrn(nn.Module):
                                  n_heads,
                                  n_layers,
                                  kernel_size,
-                                 p_dropout)
+                                 p_dropout,
+                                 n_tones)
         self.dec = Generator(inter_channels, resblock, resblock_kernel_sizes, resblock_dilation_sizes, upsample_rates,
                              upsample_initial_channel, upsample_kernel_sizes, gin_channels=gin_channels)
         self.enc_q = PosteriorEncoder(spec_channels, inter_channels, hidden_channels, 5, 1, 16,
