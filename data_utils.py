@@ -8,7 +8,7 @@ import torch.utils.data
 import commons 
 from mel_processing import spectrogram_torch
 from utils import load_wav_to_torch, load_filepaths_and_text
-from text import text_to_sequence, cleaned_text_to_sequence
+from text import text_to_sequence, cleaned_text_to_sequence, tone_to_sequence
 
 
 class TextAudioLoader(torch.utils.data.Dataset):
@@ -90,14 +90,16 @@ class TextAudioLoader(torch.utils.data.Dataset):
     def get_text(self, text, tone):
         if self.cleaned_text:
             text_norm = cleaned_text_to_sequence(text)
+            tone_norm = tone_to_sequence(tone)
         else:
-            text_norm, tone = text_to_sequence(text, self.text_cleaners)
+            text_norm, tone_norm = text_to_sequence(text, self.text_cleaners)
+        if not tone:
+            tone_norm = [0] * len(text)
         if self.add_blank:
             text_norm = commons.intersperse(text_norm, 0)
-        if not tone:
-            tone = [2] * len(text)
+            tone_norm = commons.intersperse(tone_norm, 0)
         text_norm = torch.LongTensor(text_norm)
-        tone_norm = torch.LongTensor(tone)
+        tone_norm = torch.LongTensor(tone_norm)
         return text_norm, tone_norm
 
     def __getitem__(self, index):
@@ -242,14 +244,16 @@ class TextAudioSpeakerLoader(torch.utils.data.Dataset):
     def get_text(self, text, tone):
         if self.cleaned_text:
             text_norm = cleaned_text_to_sequence(text)
+            tone_norm = tone_to_sequence(tone)
         else:
-            text_norm, tone = text_to_sequence(text, self.text_cleaners)
+            text_norm, tone_norm = text_to_sequence(text, self.text_cleaners)
+        if not tone_norm:
+            tone_norm = [2] * len(text)
         if self.add_blank:
             text_norm = commons.intersperse(text_norm, 0)
-        if not tone:
-            tone = [2] * len(text)
+            tone_norm = commons.intersperse(tone_norm, 0)
         text_norm = torch.LongTensor(text_norm)
-        tone_norm = torch.LongTensor(tone)
+        tone_norm = torch.LongTensor(tone_norm)
         return text_norm, tone_norm
 
     def get_sid(self, sid):

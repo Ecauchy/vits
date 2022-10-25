@@ -89,11 +89,11 @@ _bopomofo_to_romaji = [(re.compile('%s' % x[0]), x[1]) for x in [
     ('ㄧ', 'i'),
     ('ㄨ', 'u'),
     ('ㄩ', 'ɥ'),
-    ('ˉ', '˥˥'),
-    ('ˊ', '˧˥'),
-    ('ˇ', '˨˩˧'),
-    ('ˋ', '˥˩'),
-    ('˙', ''),
+    ('ˉ', '1'),
+    ('ˊ', '2'),
+    ('ˇ', '3'),
+    ('ˋ', '4'),
+    ('˙', '0'),
     ('，', ','),
     ('。', '.'),
     ('！', '!'),
@@ -251,3 +251,21 @@ def chinese_to_ipa(text):
     text = re.sub('([ʦs][⁼ʰ]?)([˥˦˧˨˩ ]+|$)',
                   lambda x: x.group(1)+'ɹ'+x.group(2), text)
     return text
+
+
+def chinese_to_romaji_and_tones(text):
+    text = number_to_chinese(text)
+    text = chinese_to_bopomofo(text)
+    text = latin_to_bopomofo(text)
+    text = bopomofo_to_romaji(text)
+    text = re.sub('i[aoe]', lambda x: 'y'+x.group(0)[1:], text)
+    text = re.sub('u[aoəe]', lambda x: 'w'+x.group(0)[1:], text)
+    text = re.sub('([ʦsɹ]`[⁼ʰ]?)([012345 ]+|$)', lambda x: x.group(1) +
+                  'ɹ`'+x.group(2), text).replace('ɻ', 'ɹ`')
+    text = re.sub('([ʦs][⁼ʰ]?)([012345 ]+|$)',
+                  lambda x: x.group(1)+'ɹ'+x.group(2), text)
+    tones = []
+    for word in text.split(' '):
+        tones.append(''.join([x[-1] * len(x) for x in re.split('(\D+\d)', word) if x]))
+    tones = ' '.join(tones)
+    return text, tones

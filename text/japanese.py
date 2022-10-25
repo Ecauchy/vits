@@ -194,16 +194,16 @@ def japanese_to_full_romaji_with_tone_letters(text):
           continue
         # morae after the accent. L or ˧ for low.
         if a1 > 0:
-          text += '˧'
+          text += 'L'
         # the mora the accent is on. H or ˥ for high.
         elif a1 == 0:
-          text += '˥'
+          text += 'H'
         # the first mora, also before the accent. L or ˧ for low.
         elif a2 == 1:
-          text += '˧'
+          text += 'L'
         # other morae before the accent. H or ˥ for high.
         else:
-          text += '˥'
+          text += 'H'
         # Accent phrase boundary
         if (a3 == 1) and (a2_next == 1):
           text += ' '
@@ -252,3 +252,14 @@ def japanese_to_ipa3(text):
         text = re.sub(regex, replacement, text)
     text = get_real_hatsuon(text)
     return text
+
+
+def japanese_to_full_romaji_and_tones(text):
+    cleaned_text = japanese_to_full_romaji_with_tone_letters(
+        text).replace('ts', 'ʦ').replace('u', 'ɯ').replace('...', '…') \
+        .replace('U', 'ɹ').replace('I', 'ɹ')
+    tones = []
+    for word in cleaned_text.split(' '):
+        tones.append(''.join([x[-1] * len(x) for x in re.split('([^HL]+[HL])', word) if x]))
+    tones = ' '.join(tones)
+    return cleaned_text, tones

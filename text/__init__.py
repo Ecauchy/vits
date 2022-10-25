@@ -1,10 +1,12 @@
 """ from https://github.com/keithito/tacotron """
 from text import cleaners
-from text.symbols import symbols
+from text.symbols import symbols, tone_symbols
 
 # Mappings from symbol to numeric ID and vice versa:
 _symbol_to_id = {s: i for i, s in enumerate(symbols)}
 _id_to_symbol = {i: s for i, s in enumerate(symbols)}
+_tone_symbol_to_id = {s: i for i, s in enumerate(tone_symbols)}
+_tone_id_to_symbol = {i: s for i, s in enumerate(tone_symbols)}
 
 
 def text_to_sequence(text, cleaner_names):
@@ -16,6 +18,7 @@ def text_to_sequence(text, cleaner_names):
         List of integers corresponding to the symbols in the text
     '''
     sequence = []
+    tone_sequence = None
 
     clean_text, tones = _clean_text(text, cleaner_names)
     for symbol in clean_text:
@@ -23,7 +26,9 @@ def text_to_sequence(text, cleaner_names):
             continue
         symbol_id = _symbol_to_id[symbol]
         sequence += [symbol_id]
-    return sequence, tones
+    if tones:
+        tone_sequence = tone_to_sequence(tones)
+    return sequence, tone_sequence
 
 
 def cleaned_text_to_sequence(cleaned_text):
@@ -34,6 +39,17 @@ def cleaned_text_to_sequence(cleaned_text):
         List of integers corresponding to the symbols in the text
     '''
     sequence = [_symbol_to_id[symbol] for symbol in cleaned_text if symbol in _symbol_to_id.keys()]
+    return sequence
+
+
+def tone_to_sequence(tone):
+    '''Converts a string of tone to a sequence of IDs corresponding to the symbols in the tone.
+      Args:
+        tone: string to convert to a sequence
+      Returns:
+        List of integers corresponding to the symbols in the text
+    '''
+    sequence = [_tone_symbol_to_id[symbol] for symbol in tone if symbol in _tone_symbol_to_id.keys()]
     return sequence
 
 

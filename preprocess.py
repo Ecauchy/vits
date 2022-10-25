@@ -20,7 +20,7 @@ if __name__ == '__main__':
       cleaned_text, tone = text._clean_text(original_text, args.text_cleaners)
       filepaths_and_text[i][args.text_index] = cleaned_text
       if tone:
-        filepaths_and_text.append(tone)
+        filepaths_and_text[i].append(tone)
 
     new_filelist = filelist + "." + args.out_extension
     with open(new_filelist, "w", encoding="utf-8") as f:

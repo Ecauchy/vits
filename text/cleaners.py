@@ -1,7 +1,9 @@
 import re
-from text.japanese import japanese_to_romaji_with_accent, japanese_to_ipa, japanese_to_ipa2, japanese_to_full_romaji_with_tone_letters
+from text.japanese import japanese_to_romaji_with_accent, japanese_to_ipa, japanese_to_ipa2, \
+    japanese_to_full_romaji_with_tone_letters, japanese_to_full_romaji_and_tones
 from text.korean import latin_to_hangul, number_to_hangul, divide_hangul, korean_to_lazy_ipa, korean_to_ipa
-from text.mandarin import number_to_chinese, chinese_to_bopomofo, latin_to_bopomofo, chinese_to_romaji, chinese_to_lazy_ipa, chinese_to_ipa
+from text.mandarin import number_to_chinese, chinese_to_bopomofo, latin_to_bopomofo, chinese_to_romaji, \
+    chinese_to_lazy_ipa, chinese_to_ipa, chinese_to_romaji_and_tones
 from text.sanskrit import devanagari_to_ipa
 from text.english import english_to_lazy_ipa, english_to_ipa2
 from text.thai import num_to_thai, latin_to_thai
@@ -158,3 +160,23 @@ def shanghainese_cleaners(text):
     if re.match(r'[^\.,!\?\-…~]', text[-1]):
         text += '.'
     return text
+
+
+def zh_ja_mixture_with_tone_cleaners(text):
+    tones = text
+    chinese_texts = re.findall(r'\[ZH\].*?\[ZH\]', text)
+    japanese_texts = re.findall(r'\[JA\].*?\[JA\]', text)
+    for chinese_text in chinese_texts:
+        cleaned_text, cleaned_tones = chinese_to_romaji_and_tones(chinese_text[4:-4])
+        text = text.replace(chinese_text, cleaned_text+' ', 1)
+        tones = tones.replace(chinese_text, cleaned_tones + ' ', 1)
+    for japanese_text in japanese_texts:
+        cleaned_text, cleaned_tones = japanese_to_full_romaji_and_tones(japanese_text[4:-4])
+        text = text.replace(japanese_text, cleaned_text+' ', 1)
+        tones = tones.replace(japanese_text, cleaned_tones + ' ', 1)
+    text = text[:-1]
+    tones = tones[:-1]
+    if re.match('[A-Za-zɯɹəɥ˥˦˧˨˩]', text[-1]):
+        text += '.'
+        tones += '.'
+    return text, tones

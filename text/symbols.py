@@ -14,10 +14,11 @@ _punctuation = ',.!?-~…'
 _letters = 'AEINOQUabdefghijkmnoprstuvwyzʃʧʦ↓↑ '
 '''
 
-# japanese_cleaners3
+'''# japanese_cleaners3
 _pad        = '_'
 _punctuation = ',.!?-~… '
 _letters = 'AEINOQUabdefghijkmnoprstuvwyzʃʦʧ˥˦˧˨˩'
+'''
 
 
 '''# korean_cleaners
@@ -32,11 +33,11 @@ _punctuation = '，。！？—…'
 _letters = 'ㄅㄆㄇㄈㄉㄊㄋㄌㄍㄎㄏㄐㄑㄒㄓㄔㄕㄖㄗㄘㄙㄚㄛㄜㄝㄞㄟㄠㄡㄢㄣㄤㄥㄦㄧㄨㄩˉˊˇˋ˙ '
 '''
 
-'''# zh_ja_mixture_cleaners
+# zh_ja_mixture_with_tone_cleaners
 _pad        = '_'
 _punctuation = ',.!?-~…'
-_letters = 'AEINOQUabdefghijklmnoprstuvwyzʃʧʦɯɹəɥ⁼ʰ`→↓↑ '
-'''
+_letters = 'AEINOQUabdefghijklmnoprstuvwyzʃʧʦɯɹəɥ⁼ʰ` '
+_tones = '012345HL'
 
 '''# sanskrit_cleaners
 _pad        = '_'
@@ -70,6 +71,7 @@ _letters = 'abdfghiklmnopstuvyzøŋȵɑɔɕəɤɦɪɿʑʔʰ̩̃ᴀᴇ15678 '
 
 # Export all symbols:
 symbols = [_pad] + list(_punctuation) + list(_letters)
+tone_symbols = [_pad] + list(_punctuation) + list(_tones)
 
 # Special symbol ids
 SPACE_ID = symbols.index(" ")
