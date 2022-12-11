@@ -260,6 +260,8 @@ def japanese_to_full_romaji_and_tones(text):
         .replace('U', 'ɹ').replace('I', 'ɹ')
     tones = []
     for word in cleaned_text.split(' '):
-        tones.append(''.join([x[-1] * len(x) for x in re.split('([^HL]+[HL])', word) if x]))
+        phoemes = [x for x in re.split('([^HL]+[HL])', word) if x]
+        phoemes = [x[-1] * len(x) if re.match(r'[HL]', x[-1]) else x for x in phoemes]
+        tones.append(''.join(phoemes))
     tones = ' '.join(tones)
     return cleaned_text, tones

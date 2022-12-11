@@ -266,6 +266,8 @@ def chinese_to_romaji_and_tones(text):
                   lambda x: x.group(1)+'ɹ'+x.group(2), text)
     tones = []
     for word in text.split(' '):
-        tones.append(''.join([x[-1] * len(x) for x in re.split('(\D+\d)', word) if x]))
+        phoemes = [x for x in re.split('(\D+\d)', word) if x]
+        phoemes = [x[-1] * len(x) if re.match(r'\d', x[-1]) else x for x in phoemes]
+        tones.append(''.join(phoemes))
     tones = ' '.join(tones)
     return text, tones

@@ -142,7 +142,7 @@ class TextEncoder(nn.Module):
                  n_layers,
                  kernel_size,
                  p_dropout,
-                 n_tones=8):
+                 n_tones):
         super().__init__()
         self.n_vocab = n_vocab
         self.out_channels = out_channels
@@ -167,11 +167,11 @@ class TextEncoder(nn.Module):
             p_dropout)
 
         # max mel = 4000, 64seconds
-        self.embed_positions = SinusoidalPositionalEmbedding(
-            hidden_channels,
-            padding_idx=0,
-            init_size=4000,
-        )
+        # self.embed_positions = SinusoidalPositionalEmbedding(
+        #     hidden_channels,
+        #     padding_idx=0,
+        #     init_size=4000,
+        # )
         self.drop = nn.Dropout(p_dropout)
         self.proj = nn.Conv1d(hidden_channels, out_channels * 2, 1)
 
@@ -183,11 +183,14 @@ class TextEncoder(nn.Module):
 
         x = self.encoder(x * x_mask, x_mask)
 
-        pos_in = torch.transpose(x, 1, -1)[..., 0]
-        p = self.embed_positions(x.shape[0], x.shape[-1], pos_in)
-        p = torch.transpose(p, 1, -1)  # [b, h, t]
+        batch_size = x.shape[0]
+        seque_size = x.shape[-1]
+        
+        # pos_in = torch.transpose(x, 1, -1)[..., 0]
+        # p = self.embed_positions(batch_size, seque_size, pos_in)
+        # p = torch.transpose(p, 1, -1)  # [b, h, t]
 
-        x = x + p
+        # x = x + p
         x = self.drop(x)
 
         stats = self.proj(x) * x_mask
@@ -431,8 +434,8 @@ class SynthesizerTrn(nn.Module):
                  upsample_rates,
                  upsample_initial_channel,
                  upsample_kernel_sizes,
+                 n_tones,
                  n_speakers=0,
-                 n_tones=8,
                  gin_channels=0,
                  use_sdp=True,
                  **kwargs):
@@ -524,8 +527,8 @@ class SynthesizerTrn(nn.Module):
         o = self.dec(z_slice, g=g)
         return o, l_length, attn, ids_slice, x_mask, y_mask, (z, z_p, m_p, logs_p, m_q, logs_q)
 
-    def infer(self, x, x_lengths, sid=None, noise_scale=1, length_scale=1, noise_scale_w=1., max_len=None):
-        x, m_p, logs_p, x_mask = self.enc_p(x, x_lengths)
+    def infer(self, x, tone, x_lengths, sid=None, noise_scale=1, length_scale=1, noise_scale_w=1., max_len=None):
+        x, m_p, logs_p, x_mask = self.enc_p(x, tone, x_lengths)
         if self.n_speakers > 0:
             g = self.emb_g(sid).unsqueeze(-1)  # [b, h, 1]
         else:
